@@ -1,6 +1,6 @@
-FROM node:latest as build-stage
+FROM node:alpine as build-stage
 
-WORKDIR /app
+WORKDIR /work
 
 COPY package*.json ./
 
@@ -10,6 +10,11 @@ COPY . .
 
 RUN npm run build
 
-RUN rm .env
+FROM build-stage as runtime-stage
 
-CMD ["node", "dist/index.js"]
+COPY --from=build-stage /work/dist /app
+COPY --from=build-stage /work/node_modules/ /app/node_modules/
+
+WORKDIR /app
+
+CMD ["node", "index.js"]
