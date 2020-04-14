@@ -44,7 +44,7 @@ async function main() {
 
 async function handle(result: HealthCheckResult) {
     if (result.status === Status.Online) {
-        await sendMessage(`${healthcheckTitle} is up!`);
+        await sendMessage(`${healthcheckTitle} is online!`);
     } else {
         await handleError(result);
     }
@@ -54,9 +54,9 @@ async function handleError(result: HealthCheckResult) {
     if (result.response) {
         await sendMessage(`${healthcheckTitle} has degraded! Status code: ${result.response.status}`);
     } else if (result.error) {
-        await sendMessage(`${healthcheckTitle} is down! Error: ${result.error.message}`);
+        await sendMessage(`${healthcheckTitle} is offline! Error: ${result.error.message}`);
     } else {
-        await sendMessage(`${healthcheckTitle} is down! Unhandled`);
+        await sendMessage(`${healthcheckTitle} is offline! Unhandled`);
     }
 }
 
