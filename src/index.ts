@@ -7,7 +7,7 @@ const healthcheckUrl = process.env.HEALTHCHECK_URL!;
 const healthcheckTitle = (process.env.HEALTHCHECK_TITLE || healthcheckUrl)!;
 
 const slackWebhookUrl = (process.env.SLACK_WEBHOOK)!;
-const intervalSeconds: number = parseInt(process.env.HEALTCHECK_INTERVAL || (60 * 5).toString());
+const intervalSeconds: number = parseInt(process.env.HEALTHCHECK_INTERVAL || (60 * 5).toString());
 
 enum Status {
     Online,
