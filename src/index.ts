@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import dotenv from 'dotenv-flow';
+import { Milliseconds } from './util';
 
 dotenv.config();
 
@@ -7,7 +8,14 @@ const healthcheckUrl = process.env.HEALTHCHECK_URL!;
 const healthcheckTitle = (process.env.HEALTHCHECK_TITLE || healthcheckUrl)!;
 
 const slackWebhookUrl = (process.env.SLACK_WEBHOOK)!;
-const intervalSeconds: number = parseInt(process.env.HEALTHCHECK_INTERVAL || (60 * 5).toString());
+
+const intervalMs: number = process.env.HEALTHCHECK_INTERVAL 
+    ? Milliseconds.fromSeconds(parseInt(process.env.HEALTHCHECK_INTERVAL))
+    : Milliseconds.fromMinutes(5);
+
+const graceMs: number = process.env.HEALTHCHECK_GRACE
+    ? Milliseconds.fromSeconds(parseInt(process.env.HEALTHCHECK_GRACE))
+    : Milliseconds.fromMinutes(15);
 
 enum Status {
     Online,
@@ -25,14 +33,12 @@ async function main() {
     if (!healthcheckUrl) throw new Error("HEALTHCHECK_URL undefined");
     if (!slackWebhookUrl) throw new Error("SLACK_WEBHOOK undefined");
 
-    const intervalMs = intervalSeconds * 1000;
-
     let lastStatus = Status.Online;
 
     while (true) {
         const result = await healthcheck();
 
-        if (result.status !== lastStatus) {
+        if (result.status !== lastStatus && await graceCheck(result.status)) {
             await handle(result);
         }
 
@@ -40,6 +46,11 @@ async function main() {
 
         await sleep(intervalMs);
     }
+}
+
+async function graceCheck(status: Status) {
+    await sleep(graceMs);
+    return (await healthcheck()).status === status;
 }
 
 async function handle(result: HealthCheckResult) {
