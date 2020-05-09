@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import dotenv from 'dotenv-flow';
 
-import { sleep, Milliseconds } from './util';
+import { Milliseconds } from './util';
 import { log, logError } from './util/log';
 
 dotenv.config();
@@ -106,6 +106,10 @@ async function sendMessage(msg: string) {
     } catch (err) {
         logError(err);
     }
+}
+
+export function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
 }
 
 main().catch(err => console.error(err));
