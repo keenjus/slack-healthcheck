@@ -10,6 +10,8 @@ COPY . .
 
 RUN npm run build
 
+RUN npm prune --production
+
 FROM node:alpine as runtime-stage
 
 COPY --from=build-stage /work/dist /app
