@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-FROM build-stage as runtime-stage
+FROM node:alpine as runtime-stage
 
 COPY --from=build-stage /work/dist /app
 COPY --from=build-stage /work/node_modules/ /app/node_modules/
