@@ -1,6 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
 import dotenv from 'dotenv-flow';
-import { Milliseconds } from './util';
+
+import { sleep, Milliseconds } from './util';
+import { log, logError } from './util/log';
 
 dotenv.config();
 
@@ -9,7 +11,7 @@ const healthcheckTitle = (process.env.HEALTHCHECK_TITLE || healthcheckUrl)!;
 
 const slackWebhookUrl = (process.env.SLACK_WEBHOOK)!;
 
-const intervalMs: number = process.env.HEALTHCHECK_INTERVAL 
+const intervalMs: number = process.env.HEALTHCHECK_INTERVAL
     ? Milliseconds.fromSeconds(parseInt(process.env.HEALTHCHECK_INTERVAL))
     : Milliseconds.fromMinutes(5);
 
@@ -29,9 +31,23 @@ interface HealthCheckResult {
     error?: Error;
 }
 
+function printConfiguration() {
+    const configuration =
+        '---Configuration---\n' +
+        `URL: ${healthcheckUrl}\n` +
+        `TITLE: ${healthcheckTitle}\n` +
+        `WEBHOOK: ${slackWebhookUrl}\n` +
+        `INTERVAL: ${intervalMs}ms\n` +
+        `GRACE: ${graceMs}ms\n`;
+
+    console.log(configuration);
+}
+
 async function main() {
-    if (!healthcheckUrl) throw new Error("HEALTHCHECK_URL undefined");
-    if (!slackWebhookUrl) throw new Error("SLACK_WEBHOOK undefined");
+    if (!healthcheckUrl) throw new Error('HEALTHCHECK_URL undefined');
+    if (!slackWebhookUrl) throw new Error('SLACK_WEBHOOK undefined');
+
+    printConfiguration();
 
     let lastStatus = Status.Online;
 
@@ -49,6 +65,7 @@ async function main() {
 }
 
 async function graceCheck(status: Status) {
+    log('Performing grace check');
     await sleep(graceMs);
     return (await healthcheck()).status === status;
 }
@@ -82,27 +99,13 @@ async function healthcheck(): Promise<HealthCheckResult> {
 }
 
 async function sendMessage(msg: string) {
-    log(`Sending notification: "${msg}"`);
+    log(`Sending notification: '${msg}'`);
     try {
-        const response = await axios.post(slackWebhookUrl, { "text": msg }, { headers: { "Content-Type": "application/json" } });
+        const response = await axios.post(slackWebhookUrl, { 'text': msg }, { headers: { 'Content-Type': 'application/json' } });
         log(`Slack webhook status code: ${response.status}`);
     } catch (err) {
         logError(err);
     }
-}
-
-function log(msg: string) {
-    const ts = new Date().toISOString();
-    console.log(`${ts} - ${msg}`);
-}
-
-function logError(error: Error) {
-    const ts = new Date().toISOString();
-    console.error(`${ts} - ERROR: ${error.message}`);
-}
-
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(() => resolve(), ms));
 }
 
 main().catch(err => console.error(err));
