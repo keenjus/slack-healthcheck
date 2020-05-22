@@ -56,9 +56,8 @@ async function main() {
 
         if (result.status !== lastStatus && await graceCheck(result.status)) {
             await handle(result);
+            lastStatus = result.status;
         }
-
-        lastStatus = result.status;
 
         await sleep(intervalMs);
     }
