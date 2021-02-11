@@ -4,12 +4,10 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-RUN npm run build
-RUN npm prune --production
+RUN npm run bundle
 
 FROM node:alpine as runtime-stage
-COPY --from=build-stage /work/dist /app
-COPY --from=build-stage /work/node_modules/ /app/node_modules/
+COPY --from=build-stage /work/output /app
 
 WORKDIR /app
 CMD ["node", "index.js"]
